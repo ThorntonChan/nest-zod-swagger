@@ -1,7 +1,7 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiBody, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { ZodArray, ZodEnum, ZodNativeEnum, ZodObject, ZodType } from 'zod';
-import { createZodDto } from 'nestjs-zod';
+import {createZodDto, ZodDto} from 'nestjs-zod';
 
 function isZodEnum(schema: ZodType): schema is ZodEnum<any> | ZodNativeEnum<any> {
   return (schema as any)._def.typeName === 'ZodEnum' || (schema as any)._def.typeName === 'ZodNativeEnum';
@@ -99,8 +99,8 @@ function generateBodyDecorators<
   });
 }
 
-export function UseZodOpenApi<T extends ZodType>(
-    schema: T,
+export function UseZodOpenApi<T extends ZodType | ZodDto>(
+    zodTypeOrDto: T,
     opts: {
       body?: boolean;
       path?: boolean;
@@ -111,6 +111,7 @@ export function UseZodOpenApi<T extends ZodType>(
       query: true,
     }
 ) {
+  const schema = 'schema' in zodTypeOrDto ? zodTypeOrDto.schema : zodTypeOrDto;
   const decorators: MethodDecorator[] = [];
   if (opts?.path && (schema as unknown as ZodObject<any>).shape?.path) {
     decorators.push(...generateParamDecorators((schema as unknown as ZodObject<any>).shape.path));

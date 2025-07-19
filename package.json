@@ -1,6 +1,6 @@
 {
   "name": "nest-zod-swagger",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Zod validation decorators for NestJS with Swagger support",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
