@@ -1,18 +1,30 @@
 
 # NestJS Zod Swagger
 
-A lightweight library based on [nestjs-zod](https://www.npmjs.com/package/nestjs-zod) for auto openapi registration (and optionally validation) for routes in NestJS.
+A lightweight library based on [nestjs-zod](https://www.npmjs.com/package/nestjs-zod) and [nestjs-swagger](https://www.npmjs.com/package/@nestjs/swagger) for auto openapi registration (and optionally validation) for routes in NestJS.
 
 
 ## Installation
 
 ```bash
-npm install nest-zod-swagger @nestjs/common @nestjs/swagger nestjs-zod zod
+npm install nest-zod-swagger
 ```
 
+### Peer Dependencies
+While it should work, this library has not been tested with earlier versions of nestjs or zod.
+- @nestjs/common: ^11.0.0,
+- @nestjs/swagger: ^11.2.0,
+- nestjs-zod: >=4.3.1,
+- zod: >=3.13.3
+
+
 ## Swagger type generation
-First define your request schema. Zod types should include a combination of a **path** ZodObject, a **query** ZodObject and a **body** ZodObject
-    ```typescript
+First define your request schema. Zod types should include a combination of a
+- a **path** ZodObject
+- a **query** ZodObject
+- a **body** ZodObject
+- 
+```typescript
 import { z } from 'zod';
 import { ZodDto } from 'nestjs-zod';
 
@@ -32,6 +44,7 @@ export class requestSchemaDto extends createZodDto(getPortfolioRequest) {}
 The useZodOpenApi decorator will generate the openApi document based on dto.schema (or custom zod object). It will infer
 the openApi 'required' trait if a ZodType is a ZodOptional, you can also describe() your zod field and provide transformations.
 By default all of the path parameters are strings, while query parameters are either strings, string enums, or string arrays
+
 ```typescript
 import {useZodOpenApi} from "./SwaggerZod";
 
@@ -44,7 +57,8 @@ findOne() {...}
 ```
 
 #### Custom path and query fields
-    ```typescript
+
+  ```typescript
 import { ApiQueryZod } from "./SwaggerZod";
 @useZodOpenApi(requestSchemaDta.schema)
 @ApiQueryZod('hair', z.enum(['black','brown','blonde']))
@@ -53,12 +67,14 @@ findOne() {...}
 ```
 
 ## Optional - request validation
+
 #### ValidatedRequest
 Validate the path, query and body parameters in the request with a single decorator
 ```typescript
 @Get(':id')
 findOne(@ValidatedRequest(requestSchemaDto) { path, query, params }: requestSchemaDto) {...}
 ```
+
 #### Separate validation
 For more granularity, beyond this you can just use the pipeline validation provided by [nestjs-zod](https://www.npmjs.com/package/nestjs-zod)
 ```typescript
@@ -68,7 +84,6 @@ findOne(
     @ValidatedBody(requestSchemaDto) body: requestSchemaDto['body'])
 ){...}
 ```
-
 
 ## API Reference
 
