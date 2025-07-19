@@ -99,7 +99,7 @@ function generateBodyDecorators<
   });
 }
 
-export function useZodOpenApi<T extends ZodType>(
+export function UseZodOpenApi<T extends ZodType>(
     schema: T,
     opts: {
       body?: boolean;

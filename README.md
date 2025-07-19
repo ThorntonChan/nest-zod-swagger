@@ -1,7 +1,37 @@
-
 # NestJS Zod Swagger
 
 A lightweight library based on [nestjs-zod](https://www.npmjs.com/package/nestjs-zod) and [nestjs-swagger](https://www.npmjs.com/package/@nestjs/swagger) for auto openapi registration (and optionally validation) for routes in NestJS.
+
+## DISCLAIMER: WIP
+The library is currently usable, but untested with advanced zod data types. As I am not a nestjs expert there are advanced features of 
+nestjs did not attempt to utilize (e.g. metadata reflection).  
+Future versions may perhaps use the validation decorators
+(see below) to implement query and param metadata reflection and auto generation for further abstraction and increased accuracy.
+
+Contributions are very welcome.
+
+## Why
+I wrote this because I don't like messy files. To my knowledge there is no way to autogenerate query or param docs with 
+metadata reflection the way body does.  
+- These decorators reduce our overhead by only needing one schema/dto which acts as the source of truth for all queries, params, and body.
+- Because Zod types are extendable, we can also have centralized metadata (e.g. optional, description, etc.) as a single definition can be used in multiple routes.
+
+```typescript
+//Before:
+@ApiQuery({name: 'query1', type: String, description: 'description'});
+@ApiQuery({name: 'query2', type: String, description: 'description', required: true});
+@ApiQuery({name: 'query3', type: String, description: 'description'});
+@ApiParam({name: 'param', type: String, description});
+@UseZodGuard('query', QuerySchema);
+@UseZodGuard('param', ParamSchema);
+findOne(
+@Body(new ValidationPipe(...)) Body: BodyDto
+){...}
+
+//After:
+@UseZodOpenApi(RequestDto)
+findOne(@ValidatedRequest() Body: BodyDto){...}
+```
 
 
 ## Installation
@@ -23,7 +53,7 @@ First define your request schema. Zod types should include a combination of a
 - a **path** ZodObject
 - a **query** ZodObject
 - a **body** ZodObject
-- 
+
 ```typescript
 import { z } from 'zod';
 import { ZodDto } from 'nestjs-zod';
@@ -40,7 +70,7 @@ const requestSchema = z.object({
 export class requestSchemaDto extends createZodDto(getPortfolioRequest) {}
 ```
 
-### useZodOpenApi
+### UseZodOpenApi
 The useZodOpenApi decorator will generate the openApi document based on dto.schema (or custom zod object). It will infer
 the openApi 'required' trait if a ZodType is a ZodOptional, you can also describe() your zod field and provide transformations.
 By default all of the path parameters are strings, while query parameters are either strings, string enums, or string arrays
@@ -50,7 +80,7 @@ import {useZodOpenApi} from "./SwaggerZod";
 
 @useZodOpenApi(requestSchemaDta.schema)
 @Get(':id')
-findOne() {...}
+findOne() {...})
 
 // `@useZodOpenApi(requestSchemaDta.schema)` takes a second `opts` parameter that can be used to discrimiate what should be included by swagger.
 @useZodOpenApi(requestSchemaDta.schema, {path: true}) // will only generate path params in swagger
