@@ -1,46 +1,39 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiBody, ApiParam, ApiQuery } from '@nestjs/swagger';
-import { ZodArray, ZodEnum, ZodNativeEnum, ZodObject, ZodType } from 'zod';
+import {ZodArray, ZodEnum, ZodNullable, ZodObject, ZodOptional, ZodType} from 'zod';
 import {createZodDto, ZodDto} from 'nestjs-zod';
 
-function isZodEnum(schema: ZodType): schema is ZodEnum<any> | ZodNativeEnum<any> {
-  return (schema as any)._def.typeName === 'ZodEnum' || (schema as any)._def.typeName === 'ZodNativeEnum';
-}
-
-function isZodArray(schema: ZodType): schema is ZodArray<any> {
-  return (schema as any)._def.typeName === 'ZodArray';
+function unwrapTo(schema: ZodType, type: 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'undefined' | 'object' | 'default' | 'nullable' | 'enum' | 'int'| 'array' | 'optional') {
+  while (schema.def.type !== type && 'unwrap' in schema) {
+    schema = (schema.unwrap as Function)()
+  }
+  return schema.def.type === type ? schema: false
 }
 
 export function ApiParamZod<T extends ZodType>({ name, schema }: { name: string; schema: T }) {
   const apiOptions = {
     name: name,
-    required: !schema.isOptional(),
-    description: schema._def.description,
+    required: !(schema instanceof ZodOptional),
+    description: schema.description,
   };
   return applyDecorators(ApiParam({ ...apiOptions, type: String }));
 }
 
 export function ApiQueryZod<T extends ZodType>({ name, schema }: { name: string; schema: T }) {
+  const array = unwrapTo(schema, 'array')
+  const eenum = unwrapTo(schema, 'enum') as unknown as {options: string[]}
+  const optional = unwrapTo(schema, 'optional')
   const apiOptions = {
     name,
-    required: !schema.isOptional(),
-    description: schema._def.description,
-  };
-  if (isZodArray(schema)) {
-    return applyDecorators(
-        ApiQuery({
-          ...apiOptions,
-          isArray: true,
-          type: String,
-        })
-    );
+    required: !optional,
+    description: schema.description,
+    isArray: !!array
   }
-  if (isZodEnum(schema)) {
+  if (eenum) {
     return applyDecorators(
         ApiQuery({
           ...apiOptions,
-          enum: schema._def.values,
-          example: schema._def.values[0],
+          enum: eenum.options
         })
     );
   }
