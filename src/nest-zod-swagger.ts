@@ -1,13 +1,16 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiBody, ApiParam, ApiQuery } from '@nestjs/swagger';
-import {ZodArray, ZodEnum, ZodNullable, ZodObject, ZodOptional, ZodType} from 'zod';
-import {createZodDto, ZodDto} from 'nestjs-zod';
+import { ZodEnum, ZodFirstPartyTypeKind, ZodObject, ZodOptional, ZodType } from 'zod';
+import { createZodDto, ZodDto } from 'nestjs-zod';
 
-function unwrapTo(schema: ZodType, type: 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'undefined' | 'object' | 'default' | 'nullable' | 'enum' | 'int'| 'array' | 'optional') {
-  while (schema.def.type !== type && 'unwrap' in schema) {
-    schema = (schema.unwrap as Function)()
+
+type ZodTypeNames = typeof ZodFirstPartyTypeKind[keyof typeof ZodFirstPartyTypeKind];
+
+function unwrapTo(schema: ZodType, type: ZodTypeNames) {
+  while ((schema._def as any).typeName !== type && 'innerType' in schema._def) {
+    schema = (schema._def.innerType as ZodType)
   }
-  return schema.def.type === type ? schema: false
+  return (schema._def as any).typeName === type ? schema: false
 }
 
 export function ApiParamZod<T extends ZodType>({ name, schema }: { name: string; schema: T }) {
@@ -20,24 +23,33 @@ export function ApiParamZod<T extends ZodType>({ name, schema }: { name: string;
 }
 
 export function ApiQueryZod<T extends ZodType>({ name, schema }: { name: string; schema: T }) {
-  const array = unwrapTo(schema, 'array')
-  const eenum = unwrapTo(schema, 'enum') as unknown as {options: string[]}
-  const optional = unwrapTo(schema, 'optional')
+  if ((schema._def as any).typeName as ZodTypeNames === 'ZodObject') {
+    //@ts-ignore
+    return applyDecorators(...Object.entries((schema as unknown as ZodObject<any>).shape).map(([k, v]): any =>
+      ApiQueryZod({name: `${name}[${k}]`, schema: v as ZodType})
+    ))
+  }
+
+  const array = unwrapTo(schema, ZodFirstPartyTypeKind['ZodArray'])
+  const eenum = unwrapTo(schema, ZodFirstPartyTypeKind['ZodEnum'])
+  const optional = unwrapTo(schema, ZodFirstPartyTypeKind['ZodOptional'])
+  const nullable = unwrapTo(schema, ZodFirstPartyTypeKind['ZodNullable'])
   const apiOptions = {
     name,
-    required: !optional,
     description: schema.description,
-    isArray: !!array
+    required: !optional,
+    nullable: !!nullable,
+    isArray: !!array,
   }
   if (eenum) {
     return applyDecorators(
         ApiQuery({
           ...apiOptions,
-          enum: eenum.options
+          enum: (eenum as ZodEnum<any>)._def.values
         })
     );
   }
-  return ApiQuery({ ...apiOptions, type: String });
+  return applyDecorators(ApiQuery({ ...apiOptions, type: String }));
 }
 
 function generateParamDecorators<
