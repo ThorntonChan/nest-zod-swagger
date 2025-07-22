@@ -12,3 +12,4 @@ yarn-error.log*
 .idea/
 dist/
 yarn.lock
+.yarn/

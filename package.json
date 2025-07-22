@@ -1,6 +1,6 @@
 {
   "name": "nest-zod-swagger",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Zod validation decorators for NestJS with Swagger support",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,15 +15,14 @@
   "peerDependencies": {
     "@nestjs/common": ">=11.0.1",
     "@nestjs/swagger": ">=11.2.0",
-    "nestjs-zod": ">=4.3.1",
-    "zod": ">=3.13.3"
+    "nestjs-zod": ">=4.3.1"
   },
   "devDependencies": {
     "@nestjs/common": "^11.0.1",
     "@nestjs/swagger": "^11.2.0",
     "nestjs-zod": "^4.3.1",
     "typescript": "^5.5.3",
-    "zod": "^3.14.3"
+    "zod": "^3"
   },
   "keywords": [
     "nestjs",
@@ -42,5 +41,6 @@
   "bugs": {
     "url": "https://github.com/ThorntonChan/nest-zod-swagger/issues"
   },
-  "homepage": "https://github.com/ThorntonChan/nest-zod-swagger#readme"
+  "homepage": "https://github.com/ThorntonChan/nest-zod-swagger#readme",
+  "packageManager": "yarn@4.9.1+sha512.f95ce356460e05be48d66401c1ae64ef84d163dd689964962c6888a9810865e39097a5e9de748876c2e0bf89b232d583c33982773e9903ae7a76257270986538"
 }

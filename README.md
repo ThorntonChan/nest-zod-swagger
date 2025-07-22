@@ -45,7 +45,7 @@ While it should work, this library has not been tested with earlier versions of 
 - @nestjs/common: ^11.0.0,
 - @nestjs/swagger: ^11.2.0,
 - nestjs-zod: >=4.3.1,
-- zod: >=3.13.3
+- zod: **^3** (nestjs-zod currently doesn't fully support zod 4)
 
 
 ## Swagger type generation
