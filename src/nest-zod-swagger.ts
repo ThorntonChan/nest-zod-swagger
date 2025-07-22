@@ -23,9 +23,10 @@ export function ApiParamZod<T extends ZodType>({ name, schema }: { name: string;
 }
 
 export function ApiQueryZod<T extends ZodType>({ name, schema }: { name: string; schema: T }) {
-  if ((schema._def as any).typeName as ZodTypeNames === 'ZodObject') {
+  const object = unwrapTo(schema, ZodFirstPartyTypeKind['ZodObject'])
+  if (object) {
     //@ts-ignore
-    return applyDecorators(...Object.entries((schema as unknown as ZodObject<any>).shape).map(([k, v]): any =>
+    return applyDecorators(...Object.entries(object.shape).map(([k, v]): any =>
       ApiQueryZod({name: `${name}[${k}]`, schema: v as ZodType})
     ))
   }
