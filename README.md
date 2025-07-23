@@ -62,7 +62,11 @@ const requestSchema = z.object({
   path: z.object({ id: z.string().describe('The user id') }),
   query: z.object({
     country: z.enum(['us', 'gb', 'au']).describe('Country to see results for'),
-    page: z.string().transform((val) => parseInt(val, 10)).describe('Page number for pagination'),
+    // when dealing with array parameters, nestjs will always infer the parameter as a string. Thus we need to coerce it into an array
+    arrayParams: z.preprocess((val) => z.coerce.string().parse(val).split(','), z.enum(operation_types).array()).optional()
+    // zod always runs validation after transformation
+    ❌ page: z.string().transform((val) => parseInt(val, 10)).describe('Page number for pagination'),
+    ✅ page: z.preprocess((val) => parseInt(val, 10), z.number()).describe('Page number for pagination'),
   }),
   body: z.object({ unrequired: z.string().optional(), required: z.string() }),
 });

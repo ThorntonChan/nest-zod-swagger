@@ -1,5 +1,5 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiBody, ApiParam, ApiQuery } from '@nestjs/swagger';
+import {ApiBody, ApiExtraModels, ApiParam, ApiQuery} from '@nestjs/swagger';
 import { ZodEnum, ZodFirstPartyTypeKind, ZodObject, ZodOptional, ZodType } from 'zod';
 import { createZodDto, ZodDto } from 'nestjs-zod';
 
@@ -7,8 +7,16 @@ import { createZodDto, ZodDto } from 'nestjs-zod';
 type ZodTypeNames = typeof ZodFirstPartyTypeKind[keyof typeof ZodFirstPartyTypeKind];
 
 function unwrapTo(schema: ZodType, type: ZodTypeNames) {
-  while ((schema._def as any).typeName !== type && 'innerType' in schema._def) {
-    schema = (schema._def.innerType as ZodType)
+  while ((schema._def as any).typeName !== type ) {
+    if ('typeName' in schema._def && schema._def.typeName === 'ZodEffects' && 'schema' in schema._def) {
+      schema = schema._def.schema as ZodType;
+    } else if ('typeName' in schema._def && schema._def.typeName === 'ZodArray' && 'type' in schema._def) {
+      schema = schema._def.type as ZodType;
+    } else if ('innerType' in schema._def) {
+      schema = schema._def.innerType as ZodType;
+    } else {
+      break;
+    }
   }
   return (schema._def as any).typeName === type ? schema: false
 }
@@ -117,7 +125,7 @@ export function UseZodOpenApi<T extends ZodType | ZodDto>(
       query: true,
     }
 ) {
-  const schema = 'schema' in zodTypeOrDto ? zodTypeOrDto.schema : zodTypeOrDto;
+  const schema = 'schema' in zodTypeOrDto ? zodTypeOrDto.schema : zodTypeOrDto; // todo: will break v3 ZodEffects
   const decorators: MethodDecorator[] = [];
   if (opts?.path && (schema as unknown as ZodObject<any>).shape?.path) {
     decorators.push(...generateParamDecorators((schema as unknown as ZodObject<any>).shape.path));
